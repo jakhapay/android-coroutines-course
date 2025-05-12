@@ -16,12 +16,21 @@ import com.techyourchance.coroutines.demonstrations.uncaughtexception.LoggedInUs
 import com.techyourchance.coroutines.demonstrations.uncaughtexception.LoginUseCaseUncaughtException
 import com.techyourchance.coroutines.demonstrations.uncaughtexception.LoginUseCaseUncaughtException.*
 import com.techyourchance.coroutines.home.ScreenReachableFromHome
+import com.techyourchance.coroutines.solutions.exercise10.Exercise10SolutionFragment
 import kotlinx.coroutines.*
 import java.lang.Exception
 
 class Exercise10Fragment : BaseFragment() {
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Main.immediate)
+    private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Toast.makeText(requireContext(), "Exception: $throwable", Toast.LENGTH_SHORT).show()
+    }
+
+    private val coroutineScope = CoroutineScope(
+        SupervisorJob() +
+                Dispatchers.Main.immediate +
+                coroutineExceptionHandler
+    )
 
     override val screenTitle get() = ScreenReachableFromHome.EXERCISE_10.description
 
@@ -68,19 +77,19 @@ class Exercise10Fragment : BaseFragment() {
         })
 
         btnLogin.setOnClickListener {
-                coroutineScope.launch {
-                    try {
-                        btnLogin.isEnabled = false
-                        val result = loginUseCase.logIn(getUsername(), getPassword())
-                        when (result) {
-                            is Result.Success -> onUserLoggedIn(result.user)
-                            is Result.InvalidCredentials -> onInvalidCredentials()
-                            is Result.GeneralError -> onGeneralError()
-                        }
-                    } finally {
-                        refreshUiState()
+            coroutineScope.launch {
+                try {
+                    btnLogin.isEnabled = false
+                    val result = loginUseCase.logIn(getUsername(), getPassword())
+                    when (result) {
+                        is Result.Success -> onUserLoggedIn(result.user)
+                        is Result.InvalidCredentials -> onInvalidCredentials()
+                        is Result.GeneralError -> onGeneralError()
                     }
+                } finally {
+                    refreshUiState()
                 }
+            }
         }
 
         return view
@@ -119,7 +128,7 @@ class Exercise10Fragment : BaseFragment() {
 
     companion object {
         fun newInstance(): Fragment {
-            return Exercise10Fragment()
+            return Exercise10SolutionFragment()
         }
     }
 }
